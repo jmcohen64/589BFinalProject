@@ -1,65 +1,64 @@
 function u = smooth_image_rof(f, lambda, epsilon)
-% SMOOTH_IMAGE_ROF - perform ROF image restoration
-% U = SMOOTH_IMAGE_ROF(F, LAMBDA, EPSILON) performs ROF denoising.
-% Supports scalar or vector lambda and epsilon.
-% Returns 4D array if LAMBDA or EPSILON are vectors.
+% SMOOTH_IMAGE_ROF - ROF image restoration with fixed-point scheme.
+% Input:
+%   f        - noisy input image (HxW), single precision
+%   lambda   - scalar or vector of smoothing parameters
+%   epsilon  - scalar or vector of regularization parameters
+% Output:
+%   u        - denoised image(s), size HxW x K x L
 
-    % Parameters
-    maxIter = 200;        % Max number of iterations
-    tol = 1e-4;           % Convergence tolerance
+    f = double(f);
     [H, W] = size(f);
-    
-    % Convert to GPU if available
-    useGPU = parallel.gpu.GPUDevice.isAvailable;
-    if useGPU
-        f = gpuArray(f);
-    end
-
-    % Ensure lambda and epsilon are row vectors
-    lambda = lambda(:)'; 
+    lambda = lambda(:)';
     epsilon = epsilon(:)';
     K = numel(lambda);
     L = numel(epsilon);
 
-    % Initialize output
-    u = repmat(f, 1, 1, K, L);
-
-    % Expand f to 4D for broadcasting
+    % Broadcast parameters
     F = repmat(f, 1, 1, K, L);
+    u = F;  % initial guess
+
     Lambda = reshape(lambda, 1, 1, K, 1);
     Epsilon = reshape(epsilon, 1, 1, 1, L);
+    Lambda = repmat(Lambda, H, W, 1, L);
+    Eps2 = Epsilon .^ 2;
 
-    Lambda = repmat(Lambda, 1, 1, 1, L);
-    Epsilon = repmat(Epsilon, 1, 1, K, 1);
+    % Settings
+    maxIter = 100;
+    tol = 1e-4;
 
     for iter = 1:maxIter
         u_old = u;
 
+        % Symmetric padding (Neumann BC)
+        u_pad = padarray(u, [1 1], 'symmetric');
+
         % Forward differences
-        ux = circshift(u, [0 -1 0 0]) - u;
-        uy = circshift(u, [-1 0 0 0]) - u;
+        ux = u_pad(2:end-1, 3:end, :, :) - u_pad(2:end-1, 2:end-1, :, :);
+        uy = u_pad(3:end,   2:end-1, :, :) - u_pad(2:end-1, 2:end-1, :, :);
 
-        gradMag = sqrt(Epsilon.^2 + ux.^2 + uy.^2);
+        % Gradient magnitude + eps
+        mag = sqrt(ux.^2 + uy.^2 + Eps2);
+        px = ux ./ (mag + eps);
+        py = uy ./ (mag + eps);
 
-        px = ux ./ gradMag;
-        py = uy ./ gradMag;
+        % Zero-pre-padding for divergence
+        px_padded = padarray(px, [0 1], 0, 'pre');
+        py_padded = padarray(py, [1 0], 0, 'pre');
 
-        % Backward differences (divergence)
-        divx = px - circshift(px, [0 1 0 0]);
-        divy = py - circshift(py, [1 0 0 0]);
-        div_p = divx + divy;
+        % Backward divergence
+        div_p = (px_padded(:, 2:end, :, :) - px_padded(:, 1:end-1, :, :)) + ...
+                (py_padded(2:end, :, :, :) - py_padded(1:end-1, :, :, :));
 
-        % Update u
+        % Fixed-point update
         u = F - Lambda .* div_p;
 
-        % Check convergence
-        if max(abs(u(:) - u_old(:)), [], 'all') < tol
+        % Convergence check
+        rel_change = norm(u(:) - u_old(:), 2) / (norm(u_old(:), 2) + eps);
+        if rel_change < tol
             break;
         end
     end
 
-    % Gather result if on GPU
-    if useGPU
-        u = gather(u);
-    end
+    u = double(u);  % Ensure output is single
 end

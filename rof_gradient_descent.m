@@ -12,7 +12,7 @@ function u = rof_gradient_descent(f, lambda, epsilon)
 
     % Parameters
     [H, W] = size(f);
-    maxIter = 200;
+    maxIter = 500;
     tau = 0.125;         % Time step (should be < 1/4 for stability)
     tol = 1e-5;
 

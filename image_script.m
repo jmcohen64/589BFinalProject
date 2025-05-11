@@ -12,10 +12,10 @@
 
 % Updated image path
 raw_img_filename = fullfile('C:', 'Users', 'jmcoh', 'Documents', ...
-    'Arizona', '24-25', '589', 'SP2025', 'FinalProject', 'DSC00099.ARW');
+    'Arizona', '24-25', '589', 'SP2025', '589BFinalProject', 'DSC00099.ARW');
 
 % Set up tiled layout
-t = tiledlayout(2, 4, 'TileSpacing', 'compact', 'Padding', 'compact');  % 4 tiles now
+t = tiledlayout(2, 4, 'TileSpacing', 'compact', 'Padding', 'compact');
 linked_axes = [];
 
 % Read raw data and info
@@ -32,33 +32,51 @@ planes = 'rggb';
 ang = info.ImageSizeInfo.ImageRotation;
 
 for j = 1:size(Iplanar, 3)
-    ax = nexttile; 
-    imagesc(imrotate(Iplanar(:,:,j), ang)); 
-    title(['Plane ', num2str(j), ': ', planes(j)]); 
+    ax = nexttile;
+    imagesc(imrotate(Iplanar(:,:,j), ang));
+    title(['Plane ', num2str(j), ': ', planes(j)]);
     colorbar; colormap gray;
     linked_axes = [linked_axes, ax];
 end
 
 % Demosaicing and color
 Irgb = raw2rgb(raw_img_filename);
-ax = nexttile; 
-image(imresize(Irgb, 0.5)); 
-title('Demosaiced and scaled RGB image');
+ax = nexttile;
+image(Irgb);  % No resizing or scaling
+title('Demosaiced RGB image');
 colorbar;
 linked_axes = [linked_axes, ax];
 
 % --- Apply ROF smoothing ---
-gray_img = rgb2gray(Irgb);         % Convert to grayscale
-gray_img = im2double(imresize(gray_img, 0.5));  % Resize and normalize
+gray_img = rgb2gray(Irgb);                  % Convert to grayscale
+gray_img = double(gray_img);               % Force single precision, no scaling
 
 lambda = 0.1;
 epsilon = 1e-2;
 smoothed = smooth_image_rof(gray_img, lambda, epsilon);
 
+% --- Gradient descent ROF smoothing ---
+u_grad = rof_gradient_descent(gray_img, lambda, epsilon);
+u_grad = double(u_grad);  % Match class with smoothed
+
+% Compare numerically
+mse_val = immse(smoothed, u_grad);
+psnr_val = psnr(smoothed, u_grad);
+
+fprintf('MSE between smooth_image_rof and gradient descent: %.6f\n', mse_val);
+fprintf('PSNR between smooth_image_rof and gradient descent: %.2f dB\n', psnr_val);
+
 % Display ROF result
 ax = nexttile;
-imagesc(smoothed); 
-title('ROF Smoothed Grayscale'); 
+imagesc(smoothed);
+title('ROF Smoothed Grayscale');
+colorbar; colormap gray;
+linked_axes = [linked_axes, ax];
+
+% Display Gradient Descent result
+ax = nexttile;
+imagesc(u_grad);
+title('Gradient Descent ROF');
 colorbar; colormap gray;
 linked_axes = [linked_axes, ax];
 

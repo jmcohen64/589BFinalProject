@@ -9,7 +9,7 @@
 %----------------------------------------------------------------
 % Basic operations on raw images
 % Source image: https://www.reddit.com/r/EditMyRaw/comments/1jt4ecw the_official_weekly_raw_editing_challenge/
-raw_img_filename = fullfile('C:\', 'Users', 'jmcoh', 'Documents','Arizona','24-25','589','SP2025' , 'FinalProject', 'DSC00099.ARW');
+raw_img_filename = fullfile('C:\', 'Users', 'jmcoh', 'Documents','Arizona','24-25','589','SP2025' , '589BFinalProject', 'DSC00099.ARW');
 %raw_img_filename=fullfile('.','images ','credit @signatureeditsco - signatureedits.com _ DSC4583.dng')
 t = tiledlayout(2, 3, 'TileSpacing', 'compact', 'Padding', 'compact');
 linked_axes = [];
