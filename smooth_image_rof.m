@@ -24,8 +24,8 @@ function u = smooth_image_rof(f, lambda, epsilon)
     Eps2 = Epsilon .^ 2;
 
     % Settings
-    maxIter = 100;
-    tol = 1e-4;
+    maxIter = 200;
+    tol = 1e-6;
 
     for iter = 1:maxIter
         u_old = u;
@@ -56,6 +56,7 @@ function u = smooth_image_rof(f, lambda, epsilon)
         % Convergence check
         rel_change = norm(u(:) - u_old(:), 2) / (norm(u_old(:), 2) + eps);
         if rel_change < tol
+            disp("converged within maxiter")
             break;
         end
     end

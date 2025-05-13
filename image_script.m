@@ -12,7 +12,7 @@
 
 % Updated image path
 raw_img_filename = fullfile('C:', 'Users', 'jmcoh', 'Documents', ...
-    'Arizona', '24-25', '589', 'SP2025', '589BFinalProject', 'DSC00099.ARW');
+    'Arizona', '589', 'Sp25', '589BFinalProject', 'DSC00099.ARW');
 
 % Set up tiled layout
 t = tiledlayout(2, 4, 'TileSpacing', 'compact', 'Padding', 'compact');
