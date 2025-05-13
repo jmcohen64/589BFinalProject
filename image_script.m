@@ -11,8 +11,7 @@
 % Source image: https://www.reddit.com/r/EditMyRaw/comments/1jt4ecw the_official_weekly_raw_editing_challenge/
 
 % Updated image path
-raw_img_filename = fullfile('C:', 'Users', 'jmcoh', 'Documents', ...
-    'Arizona','24-25', '589', 'SP2025', '589BFinalProject', 'DSC00099.ARW');
+raw_img_filename = fullfile('home', 'u32', 'jmc696', '589BFinalProject', 'DSC00099.ARW');
 
 % Set up tiled layout
 t = tiledlayout(2, 4, 'TileSpacing', 'compact', 'Padding', 'compact');
@@ -60,6 +59,8 @@ u_grad = rof_gradient_descent(gray_img, lambda, epsilon);
 u_grad = double(u_grad);  % Match class with smoothed
 
 % Compare numerically
+disp(class(smoothed))
+disp(class(u_grad))
 mse_val = immse(smoothed, u_grad);
 psnr_val = psnr(smoothed, u_grad);
 
@@ -108,7 +109,7 @@ lambda_vals = linspace(0.01, 0.2, 25);
 epsilon_vals = linspace(1e-3, 0.05, 25);
 [Lambda, Epsilon] = meshgrid(lambda_vals, epsilon_vals);
 
-% Create 3D surface plot for MSD(f, λ, ϵ)
+% Create 3D surface plot for MSD(f, , )
 figure;
 hold on;
 

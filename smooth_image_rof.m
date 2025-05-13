@@ -63,4 +63,8 @@ function u = smooth_image_rof(f, lambda, epsilon)
         [k, l] = ind2sub([K, L], idx);
         u(:,:,k,l) = uCell{idx};
     end
+
+    if useGPU
+        u = gather(u);
+    end
 end

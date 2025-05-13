@@ -27,7 +27,7 @@ function msd = calculate_msd(f, lambda, epsilon)
             end
 
             % Compute ROF-smoothed result for this (lambda, epsilon) pair
-            u = smooth_image_rof(f, lambda_vals(i), epsilon_vals(j));
+            u = smooth_image_rof(f, lambda(i), epsilon(j));
 
             % Ensure it's on CPU for comparison
             u = gather(u);
