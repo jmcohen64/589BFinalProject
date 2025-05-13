@@ -1,5 +1,5 @@
 %----------------------------------------------------------------
-% File: basic_script.m
+% File: image_script.m
 %----------------------------------------------------------------
 %
 % Author: Marek Rychlik (rychlik@arizona.edu)
@@ -12,7 +12,7 @@
 
 % Updated image path
 raw_img_filename = fullfile('C:', 'Users', 'jmcoh', 'Documents', ...
-    'Arizona', '589', 'Sp25', '589BFinalProject', 'DSC00099.ARW');
+    'Arizona','24-25', '589', 'SP2025', '589BFinalProject', 'DSC00099.ARW');
 
 % Set up tiled layout
 t = tiledlayout(2, 4, 'TileSpacing', 'compact', 'Padding', 'compact');
@@ -82,3 +82,57 @@ linked_axes = [linked_axes, ax];
 
 % Link axes
 linkaxes(linked_axes);
+
+% Example parameter ranges
+lambda_vals = linspace(0.01, 0.2, 25);
+epsilon_vals = linspace(1e-3, 0.05, 25);
+
+% --- Compute MSD surface plots for each Bayer color plane ---
+
+% Reconstruct Bayer color planes individually
+% Red: Top-left pixels
+R = Iplanar(:,:,1);
+% Green 1: Top-right
+G1 = Iplanar(:,:,2);
+% Green 2: Bottom-left
+G2 = Iplanar(:,:,3);
+% Blue: Bottom-right
+B = Iplanar(:,:,4);
+
+% Assemble into 3D array: HxWx4
+color_planes = cat(3, R, G1, G2, B);
+
+
+% Define parameter range
+lambda_vals = linspace(0.01, 0.2, 25);
+epsilon_vals = linspace(1e-3, 0.05, 25);
+[Lambda, Epsilon] = meshgrid(lambda_vals, epsilon_vals);
+
+% Create 3D surface plot for MSD(f, λ, ϵ)
+figure;
+hold on;
+
+colors = {'r', [0 0.6 0], [0 0.9 0], 'b'};  % distinct red, green1, green2, blue
+labels = {'Red', 'Green 1', 'Green 2', 'Blue'};
+
+for i = 1:4
+    f_plane = double(color_planes(:,:,i));  % ensure it's in double precision
+    msd_plane = calculate_msd(f_plane, lambda_vals, epsilon_vals);  % MSD: (KxL)
+    
+    % Plot surface
+    surf(Lambda, Epsilon, msd_plane', ...
+        'EdgeColor', 'none', ...
+        'FaceAlpha', 0.5, ...
+        'FaceColor', colors{i}, ...
+        'DisplayName', labels{i});
+end
+
+xlabel('\lambda');
+ylabel('\epsilon');
+zlabel('MSD');
+legend show;
+title('MSD vs (\lambda, \epsilon) for each Bayer color plane');
+grid on;
+view(45, 30);
+
+
